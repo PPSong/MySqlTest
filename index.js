@@ -89,6 +89,4 @@ if (!module.parent) {
     })
 }
 
-// init()
-
 module.exports = app; // for testing

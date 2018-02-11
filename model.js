@@ -51,54 +51,89 @@ const User = sequelize.define(
     }
 )
 
-// Friendship
-const Friendship = sequelize.define(
-    'friendship', {
-        key: {
-            type: Sequelize.STRING,
-            primaryKey: true
+Account.hasOne(User, {
+    foreignKey: "accountId"
+})
+
+// 粉丝
+const FansStar = sequelize.define(
+    'fansStar', {
+        fansId: {
+            type: Sequelize.INTEGER,
+            allowNull: false,
         },
-        status: {
-            // 0: 陌生人, 1: a关注b, 2: b关注a, 3: 互为好友
-            type: Sequelize.ENUM("0", "1", "2", "3"),
+        starId: {
+            type: Sequelize.INTEGER,
             allowNull: false,
         }
     }, {
-        version: true
+        paranoid: true
     }
 )
 
-Account.hasOne(User, {foreignKey: "accountId"})
+User.belongsToMany(User, {
+    as: "Stars",
+    through: FansStar,
+    foreignKey: 'fansId',
+})
+
+User.belongsToMany(User, {
+    as: "Fans",
+    through: FansStar,
+    foreignKey: 'starId'
+})
+
+// 黑名单
+const BlackList = sequelize.define(
+    'blackList', {
+        ownerId: {
+            type: Sequelize.INTEGER,
+            allowNull: false,
+        },
+        banUserId: {
+            type: Sequelize.INTEGER,
+            allowNull: false,
+        }
+    }, {
+        paranoid: true
+    }
+)
+
+User.belongsToMany(User, {
+    as: "BanUsers",
+    through: BlackList,
+    foreignKey: 'banOwnerId'
+})
+
+User.belongsToMany(User, {
+    as: "BanOwners",
+    through: BlackList,
+    foreignKey: 'banUserId'
+})
+
+// 好友
+const Friendship = sequelize.define(
+    'friendship', {
+        id: {
+            type: Sequelize.INTEGER,
+            primaryKey: true
+        },
+    }, {
+        paranoid: true
+    }
+)
 
 User.belongsToMany(Friendship, {
-    through: 'UserFriendship',
+    as: "Friendships",
+    through: "userFriendships",
+    foreignKey: 'friendOwnerId'
 })
 
 Friendship.belongsToMany(User, {
-    through: 'UserFriendship'
+    as: "FriendOwners",
+    through: "userFriendships",
+    foreignKey: 'friendshipId'
 })
-
-// Friendship.setFriendship = async function (ua, ub, status) {
-//     let a = ua;
-//     let b = ub;
-
-//     if (ua >= ub) {
-//         a = ub;
-//         b = ua;
-//     }
-
-//     key = `${a}.${b}`
-//     const r = await Friendship.findByPrimary(key)
-
-//     if (r) {
-//         r.status = status
-//     } else {
-//         Friendship.create({
-//             key,
-//             status
-//         })
-//     }
-// };
 
 const init = async () => {
     try {
@@ -147,6 +182,6 @@ module.exports = {
     sequelize,
     Account,
     User,
-    Friendship,
+    FansStar,
     init
 }

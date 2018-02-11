@@ -15,7 +15,7 @@ const {
     sequelize,
     Account,
     User,
-    Friendship,
+    FansStar,
 } = require('./model')
 
 const authMiddware = (req, res, next) => {
@@ -43,10 +43,93 @@ const authMiddware = (req, res, next) => {
     })(req, res, next)
 }
 
-app.post("/secret", authMiddware, function (req, res) {
+// const addFans = async (fansId, starId, transaction) => {
+//     const r = await FansStar.findOne({
+//         where: {
+//             fansId: fansId,
+//             starId: starId
+//         },
+//         paranoid: false
+//     }, {
+//         transaction
+//     })
+
+//     if (r) {
+//         r.setDataValue('deletedAt', null)
+//         await r.save({
+//             transaction
+//         })
+//     } else {
+//         await FansStar.create({
+//             fansId: fansId,
+//             starId: starId
+//         }, {
+//             transaction
+//         })
+//     }
+// }
+
+// const removeFans = async (fansId, starId, transaction) => {
+//     const r = await FansStar.findOne({
+//         where: {
+//             fansId: fansId,
+//             starId: starId
+//         }
+//     }, {
+//         transaction
+//     })
+
+//     if (r) {
+//         r.setDataValue('deletedAt', Date.now())
+//         await r.save({
+//             transaction
+//         })
+//     } else {
+//        // already removed
+//     }
+// }
+
+app.post("/secret", authMiddware, async function (req, res) {
+    // const u1 = await User.findById(1)
+    // const u2 = await User.findById(2)
+    // const u3 = await User.findById(3)
+    // const u4 = await User.findById(4)
+
+    let transaction
+
+    try {
+        // get transaction
+        transaction = await sequelize.transaction()
+
+        // await u1.addFans([u2, u3], {transaction, paranoid: false})
+
+        // await u1.setFans([u3, u4], {transaction, paranoid: true})
+
+        // await u1.setFans([u2, u3], {transaction, paranoid: true})
+
+        // await addFans(1, 2, transaction)
+        // await addFans(1, 3, transaction)
+
+        // await addFans(1, 4, transaction)
+
+        // await removeFans(1, 4, transaction)
+
+        // commit
+        await transaction.commit()
+
+    } catch (err) {
+        // Rollback transaction if any errors were encountered
+        await transaction.rollback()
+
+        return res.json({
+            code: -1,
+            msg: err.toString()
+        })
+    }
+
     return res.json({
         code: 0,
-        data: "secret content"
+        data: "secret"
     })
 })
 
@@ -62,13 +145,19 @@ app.get("/follow/:accountId", [
         return
     }
 
-    const target = req.params.accountId
-
-    // 检查目标用户是否合法
+    const target = parseInt(req.params.accountId)
     const targetUser = await User.findById(target)
 
     const me = req.user.accountId
     const meUser = await User.findById(me)
+
+    // 检查目标用户是否合法
+    if (target === me) {
+        return res.json({
+            code: -1,
+            msg: '不能关注自己!'
+        })
+    }
 
     if (!targetUser) {
         return res.json({
