@@ -52,7 +52,7 @@ var strategy = new JwtStrategy(jwtOptions, async function (jwt_payload, done) {
             }]
         })
 
-        if (account.user) {
+        if (account) {
             done(null, account.user)
         } else {
             done(null, false, {

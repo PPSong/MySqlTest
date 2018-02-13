@@ -61,13 +61,20 @@ const FansStar = sequelize.define(
         fansId: {
             type: Sequelize.INTEGER,
             allowNull: false,
+            primaryKey: true
         },
         starId: {
             type: Sequelize.INTEGER,
             allowNull: false,
+            primaryKey: true
+        },
+        softDeleted: {
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
         }
     }, {
-        paranoid: true
+        paranoid: false,
     }
 )
 
@@ -89,56 +96,72 @@ const BlackList = sequelize.define(
         ownerId: {
             type: Sequelize.INTEGER,
             allowNull: false,
+            primaryKey: true
         },
-        banUserId: {
+        targetId: {
             type: Sequelize.INTEGER,
             allowNull: false,
+            primaryKey: true
+        },
+        softDeleted: {
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
         }
     }, {
-        paranoid: true
+        paranoid: false
     }
 )
 
 User.belongsToMany(User, {
     as: "BanUsers",
     through: BlackList,
-    foreignKey: 'banOwnerId'
+    foreignKey: 'ownerId'
 })
 
 User.belongsToMany(User, {
     as: "BanOwners",
     through: BlackList,
-    foreignKey: 'banUserId'
+    foreignKey: 'targetId'
 })
 
 // 好友
-const Friendship = sequelize.define(
-    'friendship', {
-        id: {
+const FriendList = sequelize.define(
+    'friendList', {
+        ownerId: {
             type: Sequelize.INTEGER,
+            allowNull: false,
             primaryKey: true
         },
+        targetId: {
+            type: Sequelize.INTEGER,
+            allowNull: false,
+            primaryKey: true
+        },
+        softDeleted: {
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        }
     }, {
-        paranoid: true
+        paranoid: false
     }
 )
 
-User.belongsToMany(Friendship, {
-    as: "Friendships",
-    through: "userFriendships",
-    foreignKey: 'friendOwnerId'
+User.belongsToMany(User, {
+    as: "FriendOwners",
+    through: FriendList,
+    foreignKey: 'targetId'
 })
 
-Friendship.belongsToMany(User, {
-    as: "FriendOwners",
-    through: "userFriendships",
-    foreignKey: 'friendshipId'
+User.belongsToMany(User, {
+    as: "Friends",
+    through: FriendList,
+    foreignKey: 'ownerId'
 })
 
 const init = async () => {
     try {
-        // await sequelize.dropAllSchemas()
-
         await sequelize.sync({
             force: true
         })
@@ -183,5 +206,7 @@ module.exports = {
     Account,
     User,
     FansStar,
+    BlackList,
+    FriendList,
     init
 }

@@ -148,6 +148,7 @@ app.post("/login", [
         return res.json({
             code: 0,
             data: {
+                id: account.id,
                 username,
                 token
             }

@@ -1,6 +1,6 @@
+const moment = require('moment')
 const passportJWT = require("passport-jwt")
 const ExtractJwt = passportJWT.ExtractJwt
-
 // passport
 let jwtOptions = {}
 jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeaderWithScheme('jwt')
@@ -30,7 +30,11 @@ const paramValidateErr = (req) => {
     }
 }
 
+const utcNow = () => {
+    return moment().utc().format('YYYY-MM-DD hh:mm:ss')
+}
 module.exports = {
     paramValidateErr,
     jwtOptions,
+    utcNow
 }
